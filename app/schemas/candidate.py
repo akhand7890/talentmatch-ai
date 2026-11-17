@@ -3,7 +3,7 @@ Pydantic schemas for Candidate profiles and Agent Memories.
 """
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, EmailStr, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CandidateMemoryBase(BaseModel):
@@ -26,7 +26,7 @@ class CandidateMemoryResponse(CandidateMemoryBase):
 
 class CandidateBase(BaseModel):
     name: str = Field(..., json_schema_extra={"example": "Alex Rivera"})
-    email: EmailStr = Field(..., json_schema_extra={"example": "alex.rivera@example.com"})
+    email: str = Field(..., json_schema_extra={"example": "alex.rivera@example.com"})
     headline: Optional[str] = Field(None, json_schema_extra={"example": "Senior Python & LLM Engineer"})
     years_of_experience: float = Field(default=0.0, json_schema_extra={"example": 5.5})
     skills: List[str] = Field(default_factory=list, json_schema_extra={"example": ["Python", "FastAPI", "Docker", "PostgreSQL", "LangChain"]})
@@ -46,7 +46,7 @@ class CandidateCreate(CandidateBase):
 
 class CandidateUpdate(BaseModel):
     name: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     headline: Optional[str] = None
     years_of_experience: Optional[float] = None
     skills: Optional[List[str]] = None
