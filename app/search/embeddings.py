@@ -36,20 +36,23 @@ class FastLocalEmbeddingProvider(BaseEmbeddingProvider):
     """
     High-performance, offline-safe dense embedding provider.
     Uses subword character & token n-gram TF-IDF projection with L2 normalization.
-    Produces high-quality cosine similarities without downloading multi-gigabyte models,
-    guaranteeing instant startup and test execution in any environment.
+    Falls back to pure numpy token hashing if scikit-learn is absent.
     """
 
     def __init__(self, dimension: int = 384):
         self._dim = dimension
-        from sklearn.feature_extraction.text import HashingVectorizer
-        self._vectorizer = HashingVectorizer(
-            n_features=dimension,
-            alternate_sign=False,
-            norm="l2",
-            analyzer="word",
-            ngram_range=(1, 2)
-        )
+        try:
+            from sklearn.feature_extraction.text import HashingVectorizer
+            self._vectorizer = HashingVectorizer(
+                n_features=dimension,
+                alternate_sign=False,
+                norm="l2",
+                analyzer="word",
+                ngram_range=(1, 2)
+            )
+            self._use_sklearn = True
+        except ImportError:
+            self._use_sklearn = False
 
     @property
     def dimension(self) -> int:
@@ -58,20 +61,35 @@ class FastLocalEmbeddingProvider(BaseEmbeddingProvider):
     def embed_text(self, text: str) -> List[float]:
         if not text:
             return [0.0] * self._dim
-        vec = self._vectorizer.transform([text]).toarray()[0]
-        norm = np.linalg.norm(vec)
-        if norm > 0:
-            vec = vec / norm
-        return vec.tolist()
+        if self._use_sklearn:
+            vec = self._vectorizer.transform([text]).toarray()[0]
+            norm = np.linalg.norm(vec)
+            if norm > 0:
+                vec = vec / norm
+            return vec.tolist()
+        else:
+            # Pure numpy token hash fallback
+            tokens = text.lower().split()
+            arr = np.zeros(self._dim, dtype=np.float32)
+            for t in tokens:
+                idx = hash(t) % self._dim
+                arr[idx] += 1.0
+            norm = np.linalg.norm(arr)
+            if norm > 0:
+                arr = arr / norm
+            return arr.tolist()
 
     def embed_batch(self, texts: List[str]) -> List[List[float]]:
         if not texts:
             return []
-        matrix = self._vectorizer.transform(texts).toarray()
-        norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-        norms[norms == 0] = 1.0
-        normalized = matrix / norms
-        return normalized.tolist()
+        if self._use_sklearn:
+            matrix = self._vectorizer.transform(texts).toarray()
+            norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+            norms[norms == 0] = 1.0
+            normalized = matrix / norms
+            return normalized.tolist()
+        else:
+            return [self.embed_text(t) for t in texts]
 
 
 class SentenceTransformerEmbeddingProvider(BaseEmbeddingProvider):

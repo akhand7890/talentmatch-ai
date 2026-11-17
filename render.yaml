@@ -14,7 +14,5 @@ services:
         value: local_mock
       - key: EMBEDDING_PROVIDER
         value: local_dense
-      - key: PORT
-        value: "8000"
       - key: OPENAI_API_KEY
         sync: false
