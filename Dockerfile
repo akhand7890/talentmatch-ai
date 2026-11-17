@@ -1,36 +1,25 @@
-# Multi-stage production Dockerfile for TalentMatch AI Agent
-FROM python:3.11-slim as builder
-
-WORKDIR /build
-COPY requirements.txt .
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && pip install --no-cache-dir --user -r requirements.txt
-
-# Final Runtime Image
-FROM python:3.11-slim as runner
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install runtime tools
+# Install curl for diagnostics
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed Python packages from builder
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+# Install python dependencies directly to global site-packages
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source code
-COPY . /app
+COPY . .
 
 # Ensure data directories exist
 RUN mkdir -p /app/data/index
 
-EXPOSE 8000
+ENV PYTHONUNBUFFERED=1
 ENV PORT=8000
+EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Shell-form CMD automatically expands Render's dynamic $PORT
+CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT

@@ -4,7 +4,6 @@ services:
     runtime: docker
     plan: free
     region: oregon
-    healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -14,5 +13,3 @@ services:
         value: local_mock
       - key: EMBEDDING_PROVIDER
         value: local_dense
-      - key: OPENAI_API_KEY
-        sync: false
