@@ -1,0 +1,23 @@
+services:
+  talentmatch-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: talentmatch-agent-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - LLM_PROVIDER=local_mock
+      - EMBEDDING_PROVIDER=local_dense
+      - DATABASE_URL=sqlite:////app/data/talent_match.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TalentMatch AI - Job Matching & Career Co-Pilot Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #121826;
+      --card-border: #1f293d;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-glow: rgba(59, 130, 246, 0.25);
+      --accent: #10b981;
+      --accent-purple: #8b5cf6;
+      --text: #f3f4f6;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --code-bg: #0d111b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(18, 24, 38, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+    .logo-text h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .logo-text p { font-size: 0.75rem; color: var(--text-muted); }
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: #0d111b;
+      padding: 0.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-btn.active, .nav-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .container {
+      max-width: 1350px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+      flex: 1;
+      width: 100%;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Grid for Chat View */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.5rem;
+      height: calc(100vh - 150px);
+    }
+    .sidebar-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .select-box, input, textarea, select {
+      width: 100%;
+      background: #0d111b;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .select-box:focus, input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+    }
+    .memory-badge {
+      display: inline-block;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      margin-bottom: 0.4rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    .tag {
+      display: inline-block;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #93c5fd;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin: 0.15rem;
+    }
+
+    /* Chat Area */
+    .chat-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(13, 17, 27, 0.5);
+    }
+    .chat-messages {
+      flex: 1;
+      padding: 1.25rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .message {
+      display: flex;
+      flex-direction: column;
+      max-width: 85%;
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background: #192237;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      border-bottom-left-radius: 2px;
+    }
+    .message.tool-info {
+      align-self: center;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      max-width: 95%;
+      padding: 0.4rem 0.8rem;
+    }
+    .chat-input-bar {
+      padding: 1rem;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      gap: 0.75rem;
+      background: #0d111b;
+    }
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.65rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-accent { background: var(--accent); }
+    .btn-accent:hover { background: #059669; }
+
+    /* Cards & Job Listings */
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+    .job-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .job-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+    }
+    .job-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .job-title { font-size: 1.05rem; font-weight: 700; color: #fff; }
+    .job-company { font-size: 0.85rem; color: var(--text-muted); }
+    .score-badge {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    /* Markdown/Evals table */
+    .eval-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+    th {
+      background: #0d111b;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">🤖</div>
+      <div class="logo-text">
+        <h1>TalentMatch AI</h1>
+        <p>Autonomous Job Matching, Semantic Retrieval & LLM Evals</p>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-btn active" onclick="switchTab('chat')">💬 Agent Co-Pilot</button>
+      <button class="nav-btn" onclick="switchTab('matcher')">🎯 2-Stage Matcher</button>
+      <button class="nav-btn" onclick="switchTab('jobs')">🔍 Live Jobs Index</button>
+      <button class="nav-btn" onclick="switchTab('evals')">📊 LLM Quality Evals</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- TAB 1: AGENT CO-PILOT -->
+    <div id="tab-chat" class="tab-content active">
+      <div class="agent-grid">
+        <div class="sidebar-panel">
+          <div>
+            <div class="card-title">👤 Select Active Candidate</div>
+            <select id="candidate-select" onchange="loadSelectedCandidate()">
+              <option value="">-- Anonymous / General Inquirer --</option>
+            </select>
+          </div>
+
+          <div id="candidate-details-box" style="display: none;">
+            <div class="card-title">📋 Candidate Profile</div>
+            <div id="cand-headline" style="font-weight:600; font-size:0.95rem; color:#93c5fd; margin-bottom:0.25rem;"></div>
+            <div id="cand-exp" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;"></div>
+            <div id="cand-skills" style="margin-bottom:0.5rem;"></div>
+          </div>
+
+          <div>
+            <div class="card-title">🧠 Long-Term Memory & Constraints</div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">
+              The agent automatically detects and persists constraints across sessions (e.g. refused sectors, salary caps).
+            </p>
+            <div id="memories-container">
+              <span style="font-size:0.8rem; color:var(--text-muted);">No memories loaded.</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="card-title">⚙️ Agent Tool Inspector</div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.5rem;">
+              Real-time tool invocations (<code style="color:#6ee7b7">search_jobs</code>, <code style="color:#6ee7b7">match_candidate_profile</code>, <code style="color:#6ee7b7">remember_candidate_fact</code>).
+            </p>
+            <div id="tool-log-container" style="font-family:'JetBrains Mono', monospace; font-size:0.75rem; color:#a7f3d0; background:#0d111b; padding:0.5rem; border-radius:6px; max-height:160px; overflow-y:auto;">
+              Idle...
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-panel">
+          <div class="chat-header">
+            <div>
+              <span style="font-weight: 700;">Conversational Agent</span>
+              <span style="font-size:0.8rem; color:var(--text-muted); margin-left:0.5rem;">Session: <code id="session-badge">active</code></span>
+            </div>
+            <button class="btn" style="padding:0.35rem 0.75rem; font-size:0.75rem; background:#374151;" onclick="clearCurrentSession()">Reset Session</button>
+          </div>
+          <div class="chat-messages" id="chat-messages">
+            <div class="message assistant">
+              👋 Hello! I am your <strong>TalentMatch AI</strong> co-pilot. I run semantic search across our live jobs index, use tool-based retrieval and 2-stage ranking, and remember your constraints and preferences.<br><br>
+              Try asking:
+              <ul style="margin-left: 1.25rem; margin-top: 0.5rem;">
+                <li><em>"Recommend the best jobs for my profile"</em></li>
+                <li><em>"Search for senior Python and LLM roles paying over $160k"</em></li>
+                <li><em>"I strictly refuse to work in crypto or blockchain"</em></li>
+              </ul>
+            </div>
+          </div>
+          <div class="chat-input-bar">
+            <input type="text" id="chat-input" placeholder="Ask about jobs, request recommendations, or state preferences..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button class="btn" onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: 2-STAGE RECOMMENDER -->
+    <div id="tab-matcher" class="tab-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          <h2>2-Stage Recommendation & Personalization Engine</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem;">Stage 1: Dense Vector Retrieval → Stage 2: Multi-Factor Re-Ranking & Constraint Filtering</p>
+        </div>
+        <button class="btn btn-accent" onclick="runMatchingForSelected()">⚡ Run Personalized Match</button>
+      </div>
+
+      <div id="match-results-container">
+        <p style="color:var(--text-muted);">Select a candidate in the dropdown or click "Run Personalized Match" to execute 2-stage matching.</p>
+      </div>
+    </div>
+
+    <!-- TAB 3: LIVE JOBS INDEX -->
+    <div id="tab-jobs" class="tab-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div>
+          <h2>Live Changing Jobs Corpus & Semantic Search</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem;">Supports dynamic indexing, incremental updates, and real-time embedding updates.</p>
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <input type="text" id="jobs-search-input" placeholder="Search semantically (e.g. RAG, MLOps, Remote)..." style="width:320px;" oninput="debounceJobSearch()" />
+        </div>
+      </div>
+      <div class="jobs-grid" id="jobs-grid"></div>
+    </div>
+
+    <!-- TAB 4: LLM QUALITY EVALS -->
+    <div id="tab-evals" class="tab-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div>
+          <h2>Automated LLM Output Quality & RAG Evaluation Suite</h2>
+          <p style="color:var(--text-muted); font-size:0.85rem;">Measures Precision@K, Recall@K, Mean Reciprocal Rank (MRR), Tool Accuracy, Constraint Adherence & Faithfulness.</p>
+        </div>
+        <button class="btn btn-accent" onclick="runEvaluationSuite()">🧪 Run Benchmark Evals</button>
+      </div>
+
+      <div class="eval-card" id="eval-report-card">
+        <p style="color:var(--text-muted);">Click "Run Benchmark Evals" to execute the quantitative evaluation pipeline across the test dataset.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let candidates = [];
+    let currentCandidate = null;
+    let sessionId = "session_" + Math.random().toString(36).substring(2, 9);
+    document.getElementById("session-badge").innerText = sessionId;
+
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(el => el.classList.remove("active"));
+      document.getElementById("tab-" + tabId).classList.add("active");
+      event.target.classList.add("active");
+
+      if (tabId === "jobs") loadJobs();
+    }
+
+    async function init() {
+      await loadCandidates();
+      loadJobs();
+    }
+
+    async function loadCandidates() {
+      try {
+        const res = await fetch("/api/v1/candidates/");
+        candidates = await res.json();
+        const sel = document.getElementById("candidate-select");
+        sel.innerHTML = '<option value="">-- Anonymous / General Inquirer --</option>';
+        candidates.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.id;
+          opt.innerText = `${c.name} (${c.headline || 'Engineer'})`;
+          sel.appendChild(opt);
+        });
+
+        if (candidates.length > 0) {
+          sel.value = candidates[0].id;
+          loadSelectedCandidate();
+        }
+      } catch (e) {
+        console.error("Failed to load candidates", e);
+      }
+    }
+
+    async function loadSelectedCandidate() {
+      const id = document.getElementById("candidate-select").value;
+      if (!id) {
+        currentCandidate = null;
+        document.getElementById("candidate-details-box").style.display = "none";
+        document.getElementById("memories-container").innerHTML = '<span style="font-size:0.8rem; color:var(--text-muted);">Anonymous session</span>';
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/candidates/${id}`);
+        currentCandidate = await res.json();
+        document.getElementById("candidate-details-box").style.display = "block";
+        document.getElementById("cand-headline").innerText = currentCandidate.name + " - " + (currentCandidate.headline || "");
+        document.getElementById("cand-exp").innerText = `Experience: ${currentCandidate.years_of_experience}y | Target: $${(currentCandidate.min_desired_salary||0).toLocaleString()} | ${currentCandidate.remote_preference}`;
+
+        const skillsBox = document.getElementById("cand-skills");
+        skillsBox.innerHTML = "";
+        (currentCandidate.skills || []).forEach(s => {
+          const tag = document.createElement("span");
+          tag.className = "tag";
+          tag.innerText = s;
+          skillsBox.appendChild(tag);
+        });
+
+        renderMemories(currentCandidate.memories || []);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderMemories(memories) {
+      const container = document.getElementById("memories-container");
+      container.innerHTML = "";
+      if (!memories || memories.length === 0) {
+        container.innerHTML = '<span style="font-size:0.8rem; color:var(--text-muted);">No memories recorded yet.</span>';
+        return;
+      }
+      memories.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "memory-badge";
+        div.innerHTML = `<strong>[${m.category}]</strong> ${m.content}`;
+        container.appendChild(div);
+      });
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("chat-input");
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+
+      // Append user msg
+      appendChatMessage("user", text);
+
+      // Loading indicator
+      const loader = appendChatMessage("tool-info", "Thinking & reasoning with tools...");
+
+      try {
+        const payload = {
+          message: text,
+          candidate_id: currentCandidate ? currentCandidate.id : null,
+          session_id: sessionId
+        };
+
+        const res = await fetch("/api/v1/agent/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        loader.remove();
+
+        // Log tool calls
+        if (data.tool_calls && data.tool_calls.length > 0) {
+          const logBox = document.getElementById("tool-log-container");
+          logBox.innerHTML = "";
+          data.tool_calls.forEach(tc => {
+            const row = document.createElement("div");
+            row.innerHTML = `⚡ <strong>${tc.tool_name}</strong> (${tc.duration_ms}ms)`;
+            logBox.appendChild(row);
+
+            appendChatMessage("tool-info", `Tool Executed: ${tc.tool_name} (${tc.duration_ms}ms)`);
+          });
+        }
+
+        // Assistant reply
+        appendChatMessage("assistant", data.reply.replace(/\n/g, "<br>"));
+
+        // Refresh memories in sidebar if candidate active
+        if (currentCandidate) {
+          loadSelectedCandidate();
+        }
+      } catch (e) {
+        loader.innerText = "Error contacting agent: " + e.message;
+      }
+    }
+
+    function appendChatMessage(role, content) {
+      const container = document.getElementById("chat-messages");
+      const msg = document.createElement("div");
+      msg.className = "message " + role;
+      msg.innerHTML = content;
+      container.appendChild(msg);
+      container.scrollTop = container.scrollHeight;
+      return msg;
+    }
+
+    async function clearCurrentSession() {
+      await fetch(`/api/v1/agent/sessions/${sessionId}`, { method: "DELETE" });
+      document.getElementById("chat-messages").innerHTML = '<div class="message assistant">Session context cleared. Ready for fresh queries.</div>';
+    }
+
+    async function loadJobs(query = "") {
+      try {
+        let url = "/api/v1/jobs/";
+        let jobs = [];
+        if (query) {
+          const res = await fetch("/api/v1/jobs/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: query, top_k: 12 })
+          });
+          const searchResults = await res.json();
+          jobs = searchResults.map(r => r.job);
+        } else {
+          const res = await fetch("/api/v1/jobs/?limit=20");
+          jobs = await res.json();
+        }
+
+        const grid = document.getElementById("jobs-grid");
+        grid.innerHTML = "";
+        jobs.forEach(j => {
+          const card = document.createElement("div");
+          card.className = "job-card";
+          card.innerHTML = `
+            <div class="job-header">
+              <div>
+                <div class="job-title">${j.title}</div>
+                <div class="job-company">${j.company} • ${j.location} (${j.remote_type})</div>
+              </div>
+              <span class="score-badge">$${(j.min_salary||0).toLocaleString()} - $${(j.max_salary||0).toLocaleString()}</span>
+            </div>
+            <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.4;">${j.description.substring(0, 140)}...</p>
+            <div>
+              ${(j.required_skills||[]).map(s => `<span class="tag">${s}</span>`).join("")}
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    let searchTimer = null;
+    function debounceJobSearch() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        const q = document.getElementById("jobs-search-input").value;
+        loadJobs(q);
+      }, 300);
+    }
+
+    async function runMatchingForSelected() {
+      if (!currentCandidate) {
+        alert("Please select a candidate first in the dropdown.");
+        return;
+      }
+      const container = document.getElementById("match-results-container");
+      container.innerHTML = "<p>Running two-stage neural retrieval and ranking...</p>";
+
+      try {
+        const res = await fetch(`/api/v1/candidates/${currentCandidate.id}/matches`);
+        const report = await res.json();
+
+        let html = `
+          <div style="background:var(--card-bg); border:1px solid var(--card-border); border-radius:10px; padding:1.25rem; margin-bottom:1.5rem;">
+            <h3>Match Summary: ${report.candidate_name}</h3>
+            <p style="color:var(--text-muted); margin-top:0.25rem;">${report.executive_summary}</p>
+            <div style="margin-top:0.75rem;">
+              <strong>Identified Skill Gaps:</strong>
+              ${report.identified_gaps.map(g => `<span class="tag" style="background:rgba(239, 68, 68, 0.2); color:#fca5a5; border-color:rgba(239, 68, 68, 0.4);">${g}</span>`).join("")}
+            </div>
+          </div>
+          <div class="jobs-grid">
+        `;
+
+        report.top_matches.forEach(m => {
+          html += `
+            <div class="job-card">
+              <div class="job-header">
+                <div>
+                  <div class="job-title">${m.title}</div>
+                  <div class="job-company">${m.company} • ${m.location} (${m.remote_type})</div>
+                </div>
+                <span class="score-badge">Fit: ${m.fit_score}%</span>
+              </div>
+              <p style="font-size:0.85rem; color:#93c5fd;"><strong>Why Recommended:</strong> ${m.why_recommended}</p>
+              <p style="font-size:0.8rem; color:var(--text-muted);"><strong>Compensation:</strong> ${m.salary_fit}</p>
+              <div>
+                <strong style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted);">Matched Skills:</strong><br>
+                ${m.matching_skills.map(s => `<span class="tag">${s}</span>`).join("")}
+              </div>
+            </div>
+          `;
+        });
+        html += "</div>";
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = "<p style='color:var(--danger)'>Error running matching: " + e.message + "</p>";
+      }
+    }
+
+    async function runEvaluationSuite() {
+      const card = document.getElementById("eval-report-card");
+      card.innerHTML = "<p>Running automated benchmark evaluation suite across test candidates and golden labels...</p>";
+
+      try {
+        const res = await fetch("/api/v1/evals/run", { method: "POST" });
+        const summary = await res.json();
+
+        let html = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div>
+              <h3>Verdict: <span style="color:${summary.quality_verdict.includes('PASSED') ? '#34d399' : '#f87171'}">${summary.quality_verdict}</span></h3>
+              <p style="color:var(--text-muted); font-size:0.85rem;">Pass Rate: <strong>${summary.pass_rate_percent}%</strong> (${summary.passed_cases}/${summary.total_cases} cases) | Latency: <strong>${summary.avg_latency_ms}ms</strong></p>
+            </div>
+            <div style="font-family:'JetBrains Mono', monospace; font-size:0.8rem; color:var(--text-muted);">${summary.run_id}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Evaluation Metric</th>
+                <th>Observed Score</th>
+                <th>Threshold</th>
+                <th>Status</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        summary.metrics.forEach(m => {
+          html += `
+            <tr>
+              <td><strong>${m.name}</strong></td>
+              <td><code>${m.score}</code></td>
+              <td><code>${m.threshold}</code></td>
+              <td><span class="score-badge" style="${m.passed ? '' : 'background:rgba(239,68,68,0.2); color:#f87171;'}">${m.passed ? '✅ PASS' : '❌ FAIL'}</span></td>
+              <td style="color:var(--text-muted); font-size:0.8rem;">${m.description}</td>
+            </tr>
+          `;
+        });
+
+        html += `
+            </tbody>
+          </table>
+
+          <h4 style="margin-top:1.5rem; margin-bottom:0.5rem;">Benchmark Case Results:</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Case</th>
+                <th>Description</th>
+                <th>P@K</th>
+                <th>R@K</th>
+                <th>MRR</th>
+                <th>Faithfulness</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+
+        summary.case_results.forEach(c => {
+          html += `
+            <tr>
+              <td><code>${c.case_id}</code></td>
+              <td>${c.case_description}</td>
+              <td><code>${c.precision_at_k}</code></td>
+              <td><code>${c.recall_at_k}</code></td>
+              <td><code>${c.reciprocal_rank}</code></td>
+              <td><code>${c.faithfulness_score}</code></td>
+              <td><span class="score-badge" style="${c.passed ? '' : 'background:rgba(239,68,68,0.2); color:#f87171;'}">${c.passed ? 'PASS' : 'FAIL'}</span></td>
+            </tr>
+          `;
+        });
+
+        html += "</tbody></table>";
+        card.innerHTML = html;
+      } catch (e) {
+        card.innerHTML = "<p style='color:var(--danger)'>Error running evals: " + e.message + "</p>";
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

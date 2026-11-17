@@ -1,0 +1,58 @@
+[
+  {
+    "id": "cand_01_alex",
+    "name": "Alex Rivera",
+    "email": "alex.rivera@example.com",
+    "headline": "Senior AI Backend Engineer",
+    "years_of_experience": 5.5,
+    "skills": ["Python", "FastAPI", "Docker", "PostgreSQL", "LLMs", "Vector Databases", "LangChain"],
+    "desired_roles": ["Senior AI Engineer", "Backend Developer"],
+    "preferred_locations": ["Remote", "San Francisco"],
+    "remote_preference": "remote",
+    "min_desired_salary": 160000,
+    "summary": "Experienced backend and AI systems builder. Built tool-calling agent microservices, RAG pipelines, and vector search systems.",
+    "memories": [
+      {
+        "category": "preference",
+        "content": "Prefers early to growth stage AI startups with strong engineering culture."
+      },
+      {
+        "category": "constraint",
+        "content": "Candidate strictly refuses crypto and blockchain roles."
+      }
+    ]
+  },
+  {
+    "id": "cand_02_samira",
+    "name": "Samira Khan",
+    "email": "samira.khan@example.com",
+    "headline": "MLOps & Cloud Infrastructure Specialist",
+    "years_of_experience": 4.5,
+    "skills": ["Python", "Kubernetes", "PyTorch", "Docker", "MLflow", "AWS"],
+    "desired_roles": ["MLOps Engineer", "AI Infrastructure Engineer"],
+    "preferred_locations": ["Remote", "New York"],
+    "remote_preference": "remote",
+    "min_desired_salary": 155000,
+    "summary": "Specializes in scalable model serving, Triton inference servers, and Kubernetes cluster management.",
+    "memories": [
+      {
+        "category": "preference",
+        "content": "Interested in distributed GPU infrastructure and low latency inference."
+      }
+    ]
+  },
+  {
+    "id": "cand_03_leo",
+    "name": "Leo Martin",
+    "email": "leo.martin@example.com",
+    "headline": "Junior Software Developer",
+    "years_of_experience": 1.2,
+    "skills": ["Python", "JavaScript", "HTML/CSS", "Git", "SQL"],
+    "desired_roles": ["Junior Software Engineer", "Junior Frontend Developer"],
+    "preferred_locations": ["Chicago", "Remote"],
+    "remote_preference": "hybrid",
+    "min_desired_salary": 75000,
+    "summary": "Recent CS graduate passionate about full-stack web development and backend APIs.",
+    "memories": []
+  }
+]

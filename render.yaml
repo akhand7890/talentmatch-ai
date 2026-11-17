@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: talentmatch-ai-agent
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: LLM_PROVIDER
+        value: local_mock
+      - key: EMBEDDING_PROVIDER
+        value: local_dense
+      - key: PORT
+        value: "8000"
+      - key: OPENAI_API_KEY
+        sync: false
